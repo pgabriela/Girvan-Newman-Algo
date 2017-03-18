@@ -103,8 +103,8 @@ Matrix* betweenness(Matrix* test){
 	for(int i=0; i<test->col; i++){
 		nodes[i] = new Node;
 		nodes[i]->num_of_paths = 0;
+		nodes[i]->pos = i;
 	}
-	//int currentNode = -1;
 
 	//Create a matrix storing the total betweenness
 	Matrix* totalBet = new Matrix;
@@ -120,13 +120,20 @@ Matrix* betweenness(Matrix* test){
 		}
 	}
 
+	////---------------DEBUG------------
+	/**/cout<<"This is TotalBetMat"<<endl;
+	/**/printMatrix(totalBet);
+	/**/cout<<endl;
+	////--------------------------------
+
+
 	//Calculating the total betweenness
 	for(int i=0; i<test->row; i++){
 		int_queue* Queue = new int_queue(test->col);	//BFSVisit Starts here
-		//currentNode = i;								//currentNode = which root in current bfs tree
 		for(int j=0; j<test->col; j++){					//Initialization
 			nodes[j]->color = WHITE;
 			nodes[j]->distance = -1;
+			nodes[j]->num_of_paths = 0;
 		}
 		nodes[i]->distance = 0;
 		Queue->enqueue(nodes[i]);
@@ -134,10 +141,10 @@ Matrix* betweenness(Matrix* test){
 			Node* u = Queue->front();					//for dequeue,
 			Queue->dequeue();							//just use different method
 			for(int v=0; v<test->col; v++){
-				if(test->data[i][v]==1){
+				if(test->data[u->pos][v]==1){
 					if(nodes[v]->color==WHITE){
 						nodes[v]->color=GRAY;
-						nodes[v]->distance = nodes[i]->distance + 1;
+						nodes[v]->distance = nodes[u->pos]->distance + 1;
 						Queue->enqueue(nodes[v]);
 					}
 				}
@@ -150,9 +157,9 @@ Matrix* betweenness(Matrix* test){
 		Matrix* tempBet = new Matrix;						//
 		tempBet->col = test->col;							//
 		tempBet->row = test->row;							//
-		tempBet->data = new double* [totalBet->row];			// Making a matrix called tempBet
+		tempBet->data = new double* [totalBet->row];		// Making a matrix called tempBet
 		for(int i=0; i<tempBet->row; i++){					//
-			tempBet->data[i] = new double[tempBet->col];		//
+			tempBet->data[i] = new double[tempBet->col];	//
 		}													//
 		for(int i=0; i<tempBet->row; i++){					//
 			for(int j=0; j<tempBet->col; j++){				//
@@ -161,7 +168,7 @@ Matrix* betweenness(Matrix* test){
 		}													//
 
 		//Calculate the number of shortest path for node i to each nodes
-		double max_path = 0;										//
+		double max_path = 0;									//
 		for(int iter=0;iter<test->row; iter++){					// Calculate diameter
 			max_path = max(max_path, nodes[iter]->distance);	//
 		}														//
@@ -193,7 +200,7 @@ Matrix* betweenness(Matrix* test){
 		while(deep>0){
 			for(int q=0; q<tempBet->row; q++){
 				if(nodes[q]->distance == deep){
-					int total=1, predNum=0, totalPred_num_of_path=0;
+					double total=1, predNum=0, totalPred_num_of_path=0;
 
 					//summing all the edge betweenness below this node that is connected to this node
 					for(int z=0; z<tempBet->col; z++){
@@ -222,6 +229,11 @@ Matrix* betweenness(Matrix* test){
 			}
 			deep--;
 		}
+		////---------------DEBUG------------
+		/**/cout<<"This is TempBetMat"<<endl;
+		/**/printMatrix(tempBet);
+		/**/cout<<endl;
+		////--------------------------------
 
 		//Add the total betweenness matrix by the betweenness from this current tree
 		for(int row=0; row<totalBet->row; row++){
@@ -229,6 +241,12 @@ Matrix* betweenness(Matrix* test){
 				totalBet->data[row][col] += tempBet->data[row][col];
 			}
 		}
+
+		////---------------DEBUG------------
+		/**/cout<<"This is TotalBetMat"<<endl;
+		/**/printMatrix(totalBet);
+		/**/cout<<endl;
+		////--------------------------------
 
 		delete Queue;
 		deleteMatrix(tempBet);
@@ -257,9 +275,24 @@ Matrix* betweenness(Matrix* test){
 
 int main() {
 	Matrix* mat = createMatrix("input.txt");
-	Matrix* totalBetweennessMat = betweenness(mat);
-	printMatrix(mat);
+
+	//Copy Original matrix
+	Matrix* copymat = new Matrix;
+	copymat->row = copymat->col = mat->col;
+	copymat->data = new double*[copymat->row];
+	for(int i=0; i<copymat->row; i++){
+		copymat->data[i] = new double[copymat->col];
+	}
+	for(int i=0; i<copymat->row; i++){
+		for(int j=0; j<copymat->col; j++){
+			copymat->data[i][j] = mat->data[i][j];
+		}
+	}
+
+	Matrix* totalBetweennessMat = betweenness(copymat);
+	printMatrix(copymat);
 	printMatrix(totalBetweennessMat);
 	deleteMatrix(totalBetweennessMat);
 	deleteMatrix(mat);
+	deleteMatrix(copymat);
 }

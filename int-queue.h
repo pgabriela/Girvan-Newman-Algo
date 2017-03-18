@@ -11,6 +11,7 @@ struct Node {
 	color_enum color;
 	double distance;
 	double num_of_paths;
+	int pos;
 };
 
 class int_queue // Circular queue
