@@ -96,24 +96,8 @@ void deleteMatrix(Matrix *m){
 //						Start of Betweenness Function					 //
 ///////////////////////////////////////////////////////////////////////////
 
-Matrix* betweenness(Matrix* test){
+Matrix* betweenness(Matrix* test, Node* nodes[], Matrix* totalBet){
 
-	//Create an array of Nodes
-	Node* nodes[test->col];
-	for(int i=0; i<test->col; i++){
-		nodes[i] = new Node;
-		nodes[i]->num_of_paths = 0;
-		nodes[i]->pos = i;
-	}
-
-	//Create a matrix storing the total betweenness
-	Matrix* totalBet = new Matrix;
-	totalBet->col = test->col;
-	totalBet->row = test->row;
-	totalBet->data = new double* [totalBet->row];
-	for(int i=0; i<totalBet->row; i++){
-		totalBet->data[i] = new double[totalBet->col];
-	}
 	for(int i=0; i<totalBet->row; i++){
 		for(int j=0; j<totalBet->col; j++){
 			totalBet->data[i][j] = 0;
@@ -121,9 +105,9 @@ Matrix* betweenness(Matrix* test){
 	}
 
 	////---------------DEBUG------------
-	/**/cout<<"This is TotalBetMat"<<endl;
-	/**/printMatrix(totalBet);
-	/**/cout<<endl;
+	/**///cout<<"This is TotalBetMat"<<endl;
+	/**///printMatrix(totalBet);
+	/**///cout<<endl;
 	////--------------------------------
 
 
@@ -138,18 +122,21 @@ Matrix* betweenness(Matrix* test){
 		nodes[i]->distance = 0;
 		Queue->enqueue(nodes[i]);
 		while(!Queue->empty()){
-			Node* u = Queue->front();					//for dequeue,
-			Queue->dequeue();							//just use different method
+			Node* u = Queue->front();					// for dequeue, just splitting the
+			Queue->dequeue();							// usual dequeue function into 2 function
 			for(int v=0; v<test->col; v++){
 				if(test->data[u->pos][v]==1){
 					if(nodes[v]->color==WHITE){
-						nodes[v]->color=GRAY;
-						nodes[v]->distance = nodes[u->pos]->distance + 1;
-						Queue->enqueue(nodes[v]);
+						nodes[v]->color=GRAY;									// Color the node that will be visited to GRAY
+
+						nodes[v]->distance = nodes[u->pos]->distance + 1;		// The distance of the nodes that will be visited equals to
+																				// 1 + the distance of current node
+
+						Queue->enqueue(nodes[v]);								// Put the node that will be visited to the queue
 					}
 				}
 			}
-			u->color = BLACK;
+			u->color = BLACK;		//color the node that is done with BLACK
 		}
 
 		//Put the current betweenness matrix in tempBet matrix
@@ -157,7 +144,7 @@ Matrix* betweenness(Matrix* test){
 		Matrix* tempBet = new Matrix;						//
 		tempBet->col = test->col;							//
 		tempBet->row = test->row;							//
-		tempBet->data = new double* [totalBet->row];		// Making a matrix called tempBet
+		tempBet->data = new double* [totalBet->row];		// Creating a matrix called tempBet
 		for(int i=0; i<tempBet->row; i++){					//
 			tempBet->data[i] = new double[tempBet->col];	//
 		}													//
@@ -230,9 +217,9 @@ Matrix* betweenness(Matrix* test){
 			deep--;
 		}
 		////---------------DEBUG------------
-		/**/cout<<"This is TempBetMat"<<endl;
-		/**/printMatrix(tempBet);
-		/**/cout<<endl;
+		/**///cout<<"This is TempBetMat"<<endl;
+		/**///printMatrix(tempBet);
+		/**///cout<<endl;
 		////--------------------------------
 
 		//Add the total betweenness matrix by the betweenness from this current tree
@@ -243,9 +230,9 @@ Matrix* betweenness(Matrix* test){
 		}
 
 		////---------------DEBUG------------
-		/**/cout<<"This is TotalBetMat"<<endl;
-		/**/printMatrix(totalBet);
-		/**/cout<<endl;
+		/**///cout<<"This is TotalBetMat"<<endl;
+		/**///printMatrix(totalBet);
+		/**///cout<<endl;
 		////--------------------------------
 
 		delete Queue;
@@ -260,23 +247,116 @@ Matrix* betweenness(Matrix* test){
 		}
 	}
 
-
-	for(int i=0; i<test->col; i++){
-		delete nodes[i];
-	}
 	return totalBet;
 }
 ///////////////////////////////////////////////////////////////////////////
 //						End of Betweenness Function						 //
 ///////////////////////////////////////////////////////////////////////////
 
+
+//==========================================================================================================================
+//==========================================================================================================================
+
+
+///////////////////////////////////////////////////////////////////////////
+//						Start of Decompose Function						 //
+///////////////////////////////////////////////////////////////////////////
+
+void decompose(Matrix* copymat, Node* nodes[], Matrix* totalBetweennessMat, int &clusterNum){
+
+	//Initialize the cluster data of all nodes differently with each other (maximum possible number of clusters)
+	for(int i=0; i<copymat->row; i++){
+		nodes[i]->cluster = i;
+	}
+
+	//Search for the largest betweenness value
+	double biggestBet=0;
+	for(int i=0; i<copymat->row; i++){
+		for(int j=0; j<copymat->col; j++){
+			if(totalBetweennessMat->data[i][j]>0){
+				biggestBet = max(biggestBet, totalBetweennessMat->data[i][j]);
+			}
+		}
+	}
+
+	//Erase the edge(s) with the biggest betweenness value
+	for(int i=0; i<copymat->row; i++){
+		for(int j=0; j<copymat->col; j++){
+			if(totalBetweennessMat->data[i][j]==biggestBet){
+				copymat->data[i][j] = 0;
+			}
+		}
+	}
+
+	//Split the nodes into clusters
+	for(int i=0; i<copymat->row; i++){
+		for(int j=0; j<copymat->col; j++){
+			if(copymat->data[i][j]==1 && i!=j){
+				nodes[j]->cluster = nodes[i]->cluster;
+			}
+		}
+	}
+
+	//Count the total number of clusters as well as put the groups of cluster into cluster[]
+	int cluster[copymat->row];
+	clusterNum=0;
+	for(int i=0; i<copymat->row; i++){
+		cluster[i] = -1;
+	}
+	for(int i=0; i<copymat->row; i++){
+		int flag=0;
+		for(int j=0; j<copymat->row; j++){
+			if(cluster[j] == nodes[i]->cluster){
+				flag = 1;
+				break;
+			}
+		}
+		if(!flag){
+			cluster[clusterNum] = nodes[i]->cluster;
+			clusterNum++;
+		}
+	}
+
+
+	//Print out the decomposition
+	cout<<"(";
+	for(int i=0; i<clusterNum; i++){
+		cout<<"[";
+		int first=0;
+		for(int j=0; j<copymat->row; j++){
+			if(nodes[j]->cluster==cluster[i]){
+				first++;
+				if(first!=1){
+					cout<<", "<<(j+1);
+				}else{
+					cout<<(j+1);
+				}
+			}
+		}
+		if(i==clusterNum-1){
+			cout<<"]";
+		}else{
+			cout<<"], ";
+		}
+	}
+	cout<<")"<<endl;
+
+}
+
+///////////////////////////////////////////////////////////////////////////
+//						End of Decompose Function						 //
+///////////////////////////////////////////////////////////////////////////
+
+
 //==========================================================================================================================
 //==========================================================================================================================
 
 int main() {
+
+	//original matrix stored in matrix called 'mat'
 	Matrix* mat = createMatrix("input.txt");
 
-	//Copy Original matrix
+	//Copy Original matrix called 'copymat'
 	Matrix* copymat = new Matrix;
 	copymat->row = copymat->col = mat->col;
 	copymat->data = new double*[copymat->row];
@@ -289,10 +369,52 @@ int main() {
 		}
 	}
 
-	Matrix* totalBetweennessMat = betweenness(copymat);
-	printMatrix(copymat);
-	printMatrix(totalBetweennessMat);
+
+	//Create an array of Nodes called 'nodes'
+	Node* nodes[mat->col];
+	for(int i=0; i<mat->col; i++){
+		nodes[i] = new Node;
+		nodes[i]->num_of_paths = 0;
+		nodes[i]->pos = i;
+		nodes[i]->cluster = 0;
+	}
+
+
+	//Create a matrix storing the total betweenness called 'totalBet'
+	Matrix* totalBet = new Matrix;
+	totalBet->col = mat->col;
+	totalBet->row = mat->row;
+	totalBet->data = new double* [totalBet->row];
+	for(int i=0; i<totalBet->row; i++){
+		totalBet->data[i] = new double[totalBet->col];
+	}
+	for(int i=0; i<totalBet->row; i++){			//
+		for(int j=0; j<totalBet->col; j++){		//
+			totalBet->data[i][j] = 0;			// Initialize all item to 0
+		}										//
+	}											//
+
+
+	//creating a pointer to 'totalBet' called 'totalBetweennessMat'
+	Matrix* totalBetweennessMat = totalBet;
+
+
+	//iterate until total number of clusters == total nodes
+	int clusterNum=0;
+	cout<<"network decomposition:"<<endl;
+	for(; clusterNum<copymat->row ; ){
+		totalBetweennessMat = betweenness(copymat, nodes, totalBetweennessMat);		//compute the total betweenness of all edges
+		decompose(copymat, nodes, totalBetweennessMat, clusterNum);					//decomposition and print the result
+	}
+
+
+	//releasing the dynamic allocated memory
 	deleteMatrix(totalBetweennessMat);
+	for(int i=0; i<mat->col; i++){
+		delete nodes[i];
+	}
 	deleteMatrix(mat);
 	deleteMatrix(copymat);
+
+	return 0;
 }

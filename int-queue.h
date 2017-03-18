@@ -12,6 +12,7 @@ struct Node {
 	double distance;
 	double num_of_paths;
 	int pos;
+	int cluster;
 };
 
 class int_queue // Circular queue
