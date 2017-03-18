@@ -23,7 +23,7 @@ using namespace std;
 struct Matrix{
 	int row;
 	int col;
-	int **data;
+	double **data;
 };
 
 void printMatrix(const Matrix* m){
@@ -49,9 +49,9 @@ Matrix* createMatrix(const char file[]){
 	inf>>mat->row;
 	mat->col = mat->row;
 
-	mat->data = new int* [mat->row];
+	mat->data = new double* [mat->row];
 	for(int i=0; i<mat->row; i++){
-		mat->data[i] = new int[mat->col];
+		mat->data[i] = new double[mat->col];
 	}
 	for(int i=0; i<mat->row; i++){
 		for(int j=0; j<mat->col; j++){
@@ -110,9 +110,9 @@ Matrix* betweenness(Matrix* test){
 	Matrix* totalBet = new Matrix;
 	totalBet->col = test->col;
 	totalBet->row = test->row;
-	totalBet->data = new int* [totalBet->row];
+	totalBet->data = new double* [totalBet->row];
 	for(int i=0; i<totalBet->row; i++){
-		totalBet->data[i] = new int[totalBet->col];
+		totalBet->data[i] = new double[totalBet->col];
 	}
 	for(int i=0; i<totalBet->row; i++){
 		for(int j=0; j<totalBet->col; j++){
@@ -150,9 +150,9 @@ Matrix* betweenness(Matrix* test){
 		Matrix* tempBet = new Matrix;						//
 		tempBet->col = test->col;							//
 		tempBet->row = test->row;							//
-		tempBet->data = new int* [totalBet->row];			// Making a matrix called tempBet
+		tempBet->data = new double* [totalBet->row];			// Making a matrix called tempBet
 		for(int i=0; i<tempBet->row; i++){					//
-			tempBet->data[i] = new int[tempBet->col];		//
+			tempBet->data[i] = new double[tempBet->col];		//
 		}													//
 		for(int i=0; i<tempBet->row; i++){					//
 			for(int j=0; j<tempBet->col; j++){				//
@@ -161,7 +161,7 @@ Matrix* betweenness(Matrix* test){
 		}													//
 
 		//Calculate the number of shortest path for node i to each nodes
-		int max_path = 0;										//
+		double max_path = 0;										//
 		for(int iter=0;iter<test->row; iter++){					// Calculate diameter
 			max_path = max(max_path, nodes[iter]->distance);	//
 		}														//
@@ -236,7 +236,11 @@ Matrix* betweenness(Matrix* test){
 
 
 	//Divide all by 2
-
+	for(int k=0; k<totalBet->row; k++){
+		for(int p=0; p<totalBet->col; p++){
+			totalBet->data[k][p] /= 2;
+		}
+	}
 
 
 	for(int i=0; i<test->col; i++){
@@ -254,7 +258,8 @@ Matrix* betweenness(Matrix* test){
 int main() {
 	Matrix* mat = createMatrix("input.txt");
 	Matrix* totalBetweennessMat = betweenness(mat);
+	printMatrix(mat);
 	printMatrix(totalBetweennessMat);
-
+	deleteMatrix(totalBetweennessMat);
 	deleteMatrix(mat);
 }

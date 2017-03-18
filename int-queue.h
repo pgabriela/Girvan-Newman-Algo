@@ -9,8 +9,8 @@ using namespace std;
 enum color_enum{WHITE, GRAY, BLACK};
 struct Node {
 	color_enum color;
-	int distance;
-	int num_of_paths;
+	double distance;
+	double num_of_paths;
 };
 
 class int_queue // Circular queue
