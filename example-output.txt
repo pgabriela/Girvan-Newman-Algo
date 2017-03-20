@@ -1,0 +1,11 @@
+network decomposition:
+([1, 2, 3, 4], [5, 6, 7])
+([1], [2, 4], [3], [5, 6, 7])
+([1], [2], [3], [4], [5], [6], [7])
+
+2 clusters: modularity 0.364198
+4 clusters: modularity 0.117284
+7 clusters: modularity -0.154321
+
+optimal structure: 
+([1, 2, 3, 4], [5, 6, 7])

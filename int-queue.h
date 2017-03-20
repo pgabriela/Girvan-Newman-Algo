@@ -6,6 +6,8 @@
 #include <cstdlib>
 using namespace std;
 
+
+//Creating a struct for Node type
 enum color_enum{WHITE, GRAY, BLACK};
 struct Node {
 	color_enum color;
@@ -14,6 +16,8 @@ struct Node {
 	int pos;
 	int cluster;
 };
+
+
 
 class int_queue // Circular queue
 {
